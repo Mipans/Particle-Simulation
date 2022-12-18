@@ -1,14 +1,15 @@
 import pygame
-from math import sqrt, atan2, cos, sin
-import random
+from math import sqrt
+from random import random, randrange
+def rnd(): return round(200*random()-100)/100
 pygame.init()
 
 def sign(number:int): 
     if number != 0: return abs(number)/number
     else: return 0
 
-WIDTH, HEIGHT = (400, 400)
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+WIDTH, HEIGHT = (250, 250)
+WIN = pygame.display.set_mode((2*WIDTH, 2*HEIGHT))
 pygame.display.set_caption("Particle Simulation")
 
 FPS = 60
@@ -24,19 +25,20 @@ class Particle:
     SCALE = 1
     TIMESTEP = 1
 
-    def __init__(self, xPosition, yPosition, volume, color, coefficients):
+    def __init__(self, xPosition, yPosition, volume, color, coefficients, id):
         self.xPosition = xPosition
         self.yPosition = yPosition
         self.volume = volume
         self.color = color
         self.coefficients = coefficients
+        self.id = id
 
         self.xVelocity = 0
         self.yVelocity = 0
 
     def draw(self):
-        x = self.xPosition * self.SCALE + WIDTH // 2 - self.volume//2
-        y = - self.yPosition * self.SCALE + HEIGHT // 2 - self.volume//2
+        x = self.xPosition * self.SCALE + WIDTH - self.volume//2
+        y = - self.yPosition * self.SCALE + HEIGHT - self.volume//2
 
         particleRect = pygame.Rect(x, y, self.volume, self.volume)
         pygame.draw.rect(WIN, self.color, particleRect)
@@ -46,11 +48,12 @@ class Particle:
         yDistance = self.yPosition - other.yPosition
         distance = sqrt(xDistance**2 + yDistance**2)
 
+        # calculation of the force
         force = xForce = yForce = 0
-        if 5 < distance < 80:
+        if self.volume + other.volume < distance < 80:
             force = coefficient / distance
-        elif 0 < distance < 5: 
-            force = -0.1 * abs(coefficient / distance)
+        elif 0 < distance < self.volume + other.volume: 
+            force = abs(coefficient / distance / 2)
         xForce += force * xDistance
         yForce += force * yDistance
         return xForce, yForce
@@ -61,39 +64,49 @@ class Particle:
             if self == otherParticle:
                 continue
             
-            for otherColor in self.coefficients:
-                if otherColor[0] == otherParticle.color:
-                    coefficient = otherColor[1]
-                    break
-
+            # getting the correct coefficient
+            coefficient = self.coefficients[otherParticle.id]
+            
+            # calculating the total force for each particle
             xForce, yForce = self.attration_repultion(otherParticle, coefficient)
             totalXForce += xForce
             totalYForce += yForce
 
-        if abs(self.xPosition) > WIDTH // 2:
+        # bouncing off of edges
+        if abs(self.xPosition + self.xVelocity * 0.1) > WIDTH:
             self.xVelocity *= -0.99
-        if abs(self.yPosition) > HEIGHT // 2:
+        if abs(self.yPosition + self.yVelocity * 0.1) > HEIGHT:
             self.yVelocity *= -0.99
 
+        # changing speed based on force
         self.xVelocity += totalXForce * self.TIMESTEP
         self.yVelocity += totalYForce * self.TIMESTEP
 
+        # friction
         self.xVelocity *= 0.99
         self.yVelocity *= 0.99
 
+        # speed cap
         if abs(self.xVelocity) > 75: self.xVelocity = sign(self.xVelocity) * 75
         if abs(self.yVelocity) > 75: self.yVelocity = sign(self.yVelocity) * 75
 
+        # changing position based on speed
         self.xPosition += self.xVelocity * self.TIMESTEP * 0.1
         self.yPosition += self.yVelocity * self.TIMESTEP * 0.1
 
+        # teleporting back in bounds
+        if self.xPosition >  (WIDTH - self.volume): self.xPosition = WIDTH - self.volume
+        if self.xPosition < -(WIDTH - self.volume): self.xPosition = -WIDTH + self.volume
+        if self.yPosition >  (HEIGHT - self.volume): self.yPosition = HEIGHT - self.volume
+        if self.yPosition < -(HEIGHT - self.volume): self.yPosition = -HEIGHT + self.volume
 
-def createParticles(quantity, volume, color, coefficients:list):
+
+def createParticles(quantity, volume, color, coefficients:list, id):
     listOfParticles = list()
     for n in range(quantity):
-        randomX = random.randrange(-WIDTH//2 + 10, WIDTH//2 - 10)
-        randomY = random.randrange(-HEIGHT//2 + 10, HEIGHT//2 - 10)
-        listOfParticles.append(Particle(randomX, randomY, volume, color, coefficients))
+        randomX = randrange(10 - WIDTH, 10 + WIDTH)
+        randomY = randrange(10 - HEIGHT, 10 + HEIGHT)
+        listOfParticles.append(Particle(randomX, randomY, volume, color, coefficients, id))
     return listOfParticles
 
 
@@ -109,19 +122,57 @@ def draw_particles(particles:list):
 def main():
     run = True
     clock = pygame.time.Clock()
+    
+    # x_weights   = [  RED(), WHITE(), GREEN(),  BLUE()]
+    red_weights   = [rnd(), rnd(), rnd(), rnd()]
+    white_weights = [rnd(), rnd(), rnd(), rnd()]
+    green_weights = [rnd(), rnd(), rnd(), rnd()]
+    blue_weights  = [rnd(), rnd(), rnd(), rnd()]
+    all_weights   = [red_weights, white_weights, green_weights, blue_weights]
 
-    Red_Particles   = createParticles(100, 4, RED, [(RED, -0.63), (WHT, +0.65), (GRN, -0.31), (BLU, -0.31)])
-    White_Particles = createParticles(100, 4, WHT, [(RED,  0.00), (WHT, -0.20), (GRN, -0.44), (BLU, +0.68)])
-    Green_Particles = createParticles(100, 4, GRN, [(RED, +0.96), (WHT, -0.56), (GRN, +0.60), (BLU, +0.37)])
-    Blue_Particles  = createParticles(100, 4, BLU, [(RED, -0.10), (WHT, -0.49), (GRN, +1.00), (BLU, +1.00)])
+    def edit(t:str): return t.replace(' 0.', ' + 0.').replace(' -', ' - ').replace(' 1.', ' + 1.0').replace('-1.', ' - 1.0')
+    def print_weights():
+        print()
+        for n in range(len(red_weights)): print(edit(f"RED[{n}]: {red_weights[n]}"))
+        print()
+        for n in range(len(white_weights)): print(edit(f"WHITE[{n}]: {white_weights[n]}"))
+        print()
+        for n in range(len(green_weights)): print(edit(f"GREEN[{n}]: {green_weights[n]}"))
+        print()
+        for n in range(len(blue_weights)): print(edit(f"BLUE[{n}]: {blue_weights[n]}"))
+    
+    print_weights()
+
+    Red_Particles   = createParticles(125, 4, RED, red_weights, 0)
+    White_Particles = createParticles(125, 4, WHT, white_weights, 1)
+    Green_Particles = createParticles(125, 4, GRN, green_weights, 2)
+    Blue_Particles  = createParticles(125, 4, BLU, blue_weights, 3)
+
+    All_Particles = Red_Particles + White_Particles + Green_Particles + Blue_Particles
 
     while run:
         clock.tick(FPS)
         for event in pygame.event.get():
             if (event.type == pygame.QUIT) or (pygame.key.get_pressed()[pygame.K_ESCAPE]):
                 run = False
+        
+        if pygame.key.get_pressed()[pygame.K_SPACE]:
+            selectedParticle = input("Which particle do you want to effect? [R/W/G/B] : ")
+            if   selectedParticle.capitalize() == "R": selectedParticle = 0
+            elif selectedParticle.capitalize() == "W": selectedParticle = 1
+            elif selectedParticle.capitalize() == "G": selectedParticle = 2
+            elif selectedParticle.capitalize() == "B": selectedParticle = 3
+            else: continue
+            selectedWeight = input("Which weight do you want to modify? [R/W/G/B] : ")
+            if   selectedWeight.capitalize() == "R": selectedWeight = 0
+            elif selectedWeight.capitalize() == "W": selectedWeight = 1
+            elif selectedWeight.capitalize() == "G": selectedWeight = 2
+            elif selectedWeight.capitalize() == "B": selectedWeight = 3
+            else: continue
+            try: all_weights[selectedParticle][selectedWeight] = round(200*float(input("Enter a weight (float) : "))-100)/100
+            except: continue
+            else: print_weights()
 
-        All_Particles = Red_Particles + White_Particles + Green_Particles + Blue_Particles
         for particle in (All_Particles):
             particle.update_position(All_Particles) 
         draw_particles(All_Particles)

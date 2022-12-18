@@ -1,0 +1,25 @@
+TOXIC RELATIONSHIP:
+
+RED[0]: + 0.98      WHITE[0]: - 0.17
+RED[1]: - 0.95      WHITE[1]: - 0.12
+RED[2]: + 0.09      WHITE[2]: - 0.57
+RED[3]: - 0.86      WHITE[3]: - 0.25
+
+GREEN[0]: + 0.33    BLUE[0]: - 0.46
+GREEN[1]: - 0.24    BLUE[1]: + 1.00
+GREEN[2]: - 0.52    BLUE[2]: - 0.27
+GREEN[3]: + 0.64    BLUE[3]: - 0.83
+
+
+
+SELFISH GREENS AND SELFLESS WHITES:
+
+RED[0]: - 0.25      WHITE[0]: - 0.51
+RED[1]: + 0.35      WHITE[1]: - 0.87
+RED[2]: - 0.47      WHITE[2]: - 0.09
+RED[3]: - 0.17      WHITE[3]: - 0.45
+
+GREEN[0]: + 0.46    BLUE[0]: + 0.38
+GREEN[1]: + 0.62    BLUE[1]: - 0.52
+GREEN[2]: - 0.89    BLUE[2]: + 0.49
+GREEN[3]: + 0.25    BLUE[3]: - 0.43
