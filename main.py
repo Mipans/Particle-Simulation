@@ -124,10 +124,10 @@ def main():
     clock = pygame.time.Clock()
     
     # x_weights   = [  RED(), WHITE(), GREEN(),  BLUE()]
-    red_weights   = [- 0.89, + 0.16, + 0.24, - 0.20]
-    white_weights = [+ 0.76, - 0.39, + 0.06, - 0.20]
-    green_weights = [+ 0.31, - 0.10,   1.00, - 0.20]
-    blue_weights  = [- 0.90, - 0.50, - 0.40, - 0.20]
+    red_weights   = [rand(), rand(), rand(), rand()]
+    white_weights = [rand(), rand(), rand(), rand()]
+    green_weights = [rand(), rand(), rand(), rand()]
+    blue_weights  = [rand(), rand(), rand(), rand()]
     #               [rand(), rand(), rand(), rand()]
 
     all_weights   = [red_weights, white_weights, green_weights, blue_weights]
