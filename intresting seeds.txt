@@ -23,3 +23,17 @@ GREEN[0]: + 0.46    BLUE[0]: + 0.38
 GREEN[1]: + 0.62    BLUE[1]: - 0.52
 GREEN[2]: - 0.89    BLUE[2]: + 0.49
 GREEN[3]: + 0.25    BLUE[3]: - 0.43
+
+
+
+BLUE FOOD WITH COMPETITION:
+
+RED[0]: - 0.89      WHITE[0]: + 0.76
+RED[1]: + 0.16      WHITE[1]: - 0.39
+RED[2]: + 0.24      WHITE[2]: + 0.06
+RED[3]: - 0.20      WHITE[3]: - 0.20
+
+GREEN[0]: + 0.31    BLUE[0]: - 0.90
+GREEN[1]: - 0.10    BLUE[1]: - 0.50
+GREEN[2]: + 0.02    BLUE[2]: - 0.40
+GREEN[3]: - 0.20    BLUE[3]: - 0.20

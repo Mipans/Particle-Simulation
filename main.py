@@ -1,7 +1,7 @@
 import pygame
 from math import sqrt
 from random import random, randrange
-def rnd(): return round(200*random()-100)/100
+def rand(): return round(200*random()-100)/100
 pygame.init()
 
 def sign(number:int): 
@@ -50,9 +50,9 @@ class Particle:
 
         # calculation of the force
         force = xForce = yForce = 0
-        if self.volume + other.volume < distance < 80:
+        if 2*(self.volume + other.volume) < distance < 80:
             force = coefficient / distance
-        elif 0 < distance < self.volume + other.volume: 
+        elif 0 < distance < 2*(self.volume + other.volume): 
             force = abs(coefficient / distance / 2)
         xForce += force * xDistance
         yForce += force * yDistance
@@ -124,15 +124,21 @@ def main():
     clock = pygame.time.Clock()
     
     # x_weights   = [  RED(), WHITE(), GREEN(),  BLUE()]
-    red_weights   = [rnd(), rnd(), rnd(), rnd()]
-    white_weights = [rnd(), rnd(), rnd(), rnd()]
-    green_weights = [rnd(), rnd(), rnd(), rnd()]
-    blue_weights  = [rnd(), rnd(), rnd(), rnd()]
+    red_weights   = [- 0.89, + 0.16, + 0.24, - 0.20]
+    white_weights = [+ 0.76, - 0.39, + 0.06, - 0.20]
+    green_weights = [+ 0.31, - 0.10,   1.00, - 0.20]
+    blue_weights  = [- 0.90, - 0.50, - 0.40, - 0.20]
+    #               [rand(), rand(), rand(), rand()]
+
     all_weights   = [red_weights, white_weights, green_weights, blue_weights]
 
-    def edit(t:str): return t.replace(' 0.', ' + 0.').replace(' -', ' - ').replace(' 1.', ' + 1.0').replace('-1.', ' - 1.0')
+    def edit(inText:str):
+        newText = inText.replace(" 1", " + 1").replace(" 0.", " + 0.").replace(" -", " - ")
+        if (len(newText) - newText.find('.', -4)) == 2: newText += "0"
+        return newText
+
     def print_weights():
-        print()
+        print("\n"*10)
         for n in range(len(red_weights)): print(edit(f"RED[{n}]: {red_weights[n]}"))
         print()
         for n in range(len(white_weights)): print(edit(f"WHITE[{n}]: {white_weights[n]}"))
@@ -169,7 +175,7 @@ def main():
             elif selectedWeight.capitalize() == "G": selectedWeight = 2
             elif selectedWeight.capitalize() == "B": selectedWeight = 3
             else: continue
-            try: all_weights[selectedParticle][selectedWeight] = round(200*float(input("Enter a weight (float) : "))-100)/100
+            try: all_weights[selectedParticle][selectedWeight] = round(100*float(input("Enter a weight (float) : ")))/100
             except: continue
             else: print_weights()
 
