@@ -8,7 +8,9 @@ def sign(number:int):
     if number != 0: return abs(number)/number
     else: return 0
 
-WIDTH, HEIGHT = (250, 250)
+WIDTH, HEIGHT = (800, 600)
+WIDTH //= 2
+HEIGHT //= 2
 WIN = pygame.display.set_mode((2*WIDTH, 2*HEIGHT))
 pygame.display.set_caption("Particle Simulation")
 
@@ -25,14 +27,14 @@ class Particle:
     SCALE = 1
     TIMESTEP = 1
 
-    def __init__(self, xPosition, yPosition, volume, color, coefficients, id):
-        self.xPosition = xPosition
-        self.yPosition = yPosition
+    def __init__(self, volume, color:tuple, coefficients:list, id:int):
         self.volume = volume
         self.color = color
         self.coefficients = coefficients
         self.id = id
 
+        self.xPosition = randrange(10 - WIDTH, 10 + WIDTH)
+        self.yPosition = randrange(10 - HEIGHT, 10 + HEIGHT)
         self.xVelocity = 0
         self.yVelocity = 0
 
@@ -57,7 +59,7 @@ class Particle:
         xForce += force * xDistance
         yForce += force * yDistance
         return xForce, yForce
-    
+
     def update_position(self, all_particles:list):
         totalXForce, totalYForce = 0, 0
         for otherParticle in all_particles:
@@ -91,8 +93,8 @@ class Particle:
         if abs(self.yVelocity) > 75: self.yVelocity = sign(self.yVelocity) * 75
 
         # changing position based on speed
-        self.xPosition += self.xVelocity * self.TIMESTEP * 0.1
-        self.yPosition += self.yVelocity * self.TIMESTEP * 0.1
+        self.xPosition += self.xVelocity * self.TIMESTEP * 0.2
+        self.yPosition += self.yVelocity * self.TIMESTEP * 0.2
 
         # teleporting back in bounds
         if self.xPosition >  (WIDTH - self.volume): self.xPosition = WIDTH - self.volume
@@ -101,13 +103,39 @@ class Particle:
         if self.yPosition < -(HEIGHT - self.volume): self.yPosition = -HEIGHT + self.volume
 
 
-def createParticles(quantity, volume, color, coefficients:list, id):
+def createParticles(quantity, volume, color:tuple, coefficients:list, id:int):
     listOfParticles = list()
-    for n in range(quantity):
-        randomX = randrange(10 - WIDTH, 10 + WIDTH)
-        randomY = randrange(10 - HEIGHT, 10 + HEIGHT)
-        listOfParticles.append(Particle(randomX, randomY, volume, color, coefficients, id))
+    for n in range(quantity): listOfParticles.append(Particle(volume, color, coefficients, id))
     return listOfParticles
+
+
+def edit(inText:str):
+    newText = inText.replace(" 1", " + 1").replace(" 0.", " + 0.").replace(" -", " - ")
+    if (len(newText) - newText.find('.', -4)) == 2: newText += "0"
+    return newText.replace("+ 0.00", "  0.00")
+
+
+def print_weights(weights:list, colors:list):
+    print("\n"*10)
+    for i in range(len(weights)):
+        weight = weights[i]
+        print()
+        for n in range(len(weight)): print(edit(f"{colors[i].capitalize()}[{colors[n].lower()}]: {weight[n]}"))
+
+
+def restart(all_particles:list):
+    for particle in all_particles:
+        particle.xPosition = randrange(10 - WIDTH, 10 + WIDTH)
+        particle.yPosition = randrange(10 - HEIGHT, 10 + HEIGHT)
+        particle.xVelocity = 0
+        particle.yVelocity = 0
+
+
+def reroll(all_weights:list):
+    for n in range(len(all_weights)):
+        weights = all_weights[n]
+        for i in range(len(weights)):
+            all_weights[n][i] = rand()
 
 
 def draw_particles(particles:list):
@@ -122,32 +150,21 @@ def draw_particles(particles:list):
 def main():
     run = True
     clock = pygame.time.Clock()
-    
+
+
+    colorsList = ['R', 'W', 'G', 'B']
+    colorsText = ""
+    for color in colorsList: colorsText += color 
+
     # x_weights   = [  RED(), WHITE(), GREEN(),  BLUE()]
     red_weights   = [rand(), rand(), rand(), rand()]
     white_weights = [rand(), rand(), rand(), rand()]
     green_weights = [rand(), rand(), rand(), rand()]
     blue_weights  = [rand(), rand(), rand(), rand()]
     #               [rand(), rand(), rand(), rand()]
-
     all_weights   = [red_weights, white_weights, green_weights, blue_weights]
 
-    def edit(inText:str):
-        newText = inText.replace(" 1", " + 1").replace(" 0.", " + 0.").replace(" -", " - ")
-        if (len(newText) - newText.find('.', -4)) == 2: newText += "0"
-        return newText
-
-    def print_weights():
-        print("\n"*10)
-        for n in range(len(red_weights)): print(edit(f"RED[{n}]: {red_weights[n]}"))
-        print()
-        for n in range(len(white_weights)): print(edit(f"WHITE[{n}]: {white_weights[n]}"))
-        print()
-        for n in range(len(green_weights)): print(edit(f"GREEN[{n}]: {green_weights[n]}"))
-        print()
-        for n in range(len(blue_weights)): print(edit(f"BLUE[{n}]: {blue_weights[n]}"))
-    
-    print_weights()
+    print_weights(all_weights, colorsList)
 
     Red_Particles   = createParticles(125, 4, RED, red_weights, 0)
     White_Particles = createParticles(125, 4, WHT, white_weights, 1)
@@ -158,29 +175,33 @@ def main():
 
     while run:
         clock.tick(FPS)
+        # Quitting
         for event in pygame.event.get():
             if (event.type == pygame.QUIT) or (pygame.key.get_pressed()[pygame.K_ESCAPE]):
                 run = False
-        
-        if pygame.key.get_pressed()[pygame.K_SPACE]:
-            selectedParticle = input("Which particle do you want to effect? [R/W/G/B] : ")
-            if   selectedParticle.capitalize() == "R": selectedParticle = 0
-            elif selectedParticle.capitalize() == "W": selectedParticle = 1
-            elif selectedParticle.capitalize() == "G": selectedParticle = 2
-            elif selectedParticle.capitalize() == "B": selectedParticle = 3
-            else: continue
-            selectedWeight = input("Which weight do you want to modify? [R/W/G/B] : ")
-            if   selectedWeight.capitalize() == "R": selectedWeight = 0
-            elif selectedWeight.capitalize() == "W": selectedWeight = 1
-            elif selectedWeight.capitalize() == "G": selectedWeight = 2
-            elif selectedWeight.capitalize() == "B": selectedWeight = 3
-            else: continue
-            try: all_weights[selectedParticle][selectedWeight] = round(100*float(input("Enter a weight (float) : ")))/100
-            except: continue
-            else: print_weights()
 
+        # Changing weights
+        if pygame.key.get_pressed()[pygame.K_SPACE]:
+            selectedParticle = colorsText.find(input("Which particle do you want to effect? [R/W/G/B] : "))
+            if selectedParticle == -1: continue
+            else:
+                selectedWeight = colorsText.find(input("Which weight do you want to modify? [R/W/G/B] : "))
+                if selectedWeight == -1: continue
+                else:
+                    try: all_weights[selectedParticle][selectedWeight] = round(100*float(input("Enter a weight (float) : ")))/100
+                    except: continue
+                    finally: print_weights(all_weights, colorsList)
+
+        # Re-possitioning all particles
+        if pygame.key.get_pressed()[pygame.K_r]:
+            # Re-rolling all weights
+            if pygame.key.get_pressed()[pygame.K_LCTRL]: reroll(all_weights); print_weights(all_weights, colorsList)
+            else: restart(All_Particles)
+
+        # Updating positions of all particles
         for particle in (All_Particles):
-            particle.update_position(All_Particles) 
+            particle.update_position(All_Particles)
+        # Drawing all particles
         draw_particles(All_Particles)
 
     pygame.quit()
